@@ -13,9 +13,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.springsecurity.course.security.role.ApplicationUserPermission;
 import com.springsecurity.course.security.role.ApplicationUserRole;
+
 
 import static com.springsecurity.course.security.role.ApplicationUserRole.*;
 
@@ -68,7 +70,17 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter{
 			.rememberMe()
 			.tokenValiditySeconds((int)TimeUnit.DAYS.toSeconds(21))
 			//giving a key for MD5 hash
-			.key("somethingverysecured");
+			.key("somethingverysecured")
+			//adding custom logout behavior
+			.and()
+			.logout()
+				.logoutUrl("/logout")
+				//Because we have disabled csrf, we are going to logout with GET request
+				.logoutRequestMatcher(new AntPathRequestMatcher("/logout","GET"))
+				.clearAuthentication(true)
+				.invalidateHttpSession(true)
+				.deleteCookies("remember-me","JSESSIONID")
+				.logoutSuccessUrl("/login");
 	}
 
 	@Override
