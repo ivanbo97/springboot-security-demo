@@ -18,6 +18,9 @@ import com.springsecurity.course.security.role.ApplicationUserPermission;
 import com.springsecurity.course.security.role.ApplicationUserRole;
 
 import static com.springsecurity.course.security.role.ApplicationUserRole.*;
+
+import java.util.concurrent.TimeUnit;
+
 import static com.springsecurity.course.security.role.ApplicationUserPermission.*;
 @Configuration
 @EnableWebSecurity
@@ -52,7 +55,20 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter{
 			.anyRequest()
 			.authenticated()
 			.and()
-			.httpBasic();
+			//for basic authentication without form
+			//.httpBasic();
+			//for form based authentication
+			.formLogin()
+			//for custom login page we can add our html page in resources/templates
+			.loginPage("/login").permitAll()
+			//adding page for redirection after successful login
+			.defaultSuccessUrl("/courses",true)
+			//Extending the cookie expiration time with 2 weeks (this is the default)
+			.and()
+			.rememberMe()
+			.tokenValiditySeconds((int)TimeUnit.DAYS.toSeconds(21))
+			//giving a key for MD5 hash
+			.key("somethingverysecured");
 	}
 
 	@Override
