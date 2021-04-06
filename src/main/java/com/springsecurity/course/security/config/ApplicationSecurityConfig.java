@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -30,11 +32,11 @@ import static com.springsecurity.course.security.role.ApplicationUserPermission.
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter{
 
 	
-	private final PasswordEncoder passwordEncoder;
+	private final DaoAuthenticationProvider daoAuthenticationProvider;
 	
 	@Autowired
-	public ApplicationSecurityConfig(PasswordEncoder passwordEncoder) {
-		this.passwordEncoder = passwordEncoder;
+	public ApplicationSecurityConfig(DaoAuthenticationProvider daoAuthenticationProvider) {
+		this.daoAuthenticationProvider = daoAuthenticationProvider;
 	}
 	
 	@Override
@@ -65,7 +67,12 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter{
 			.loginPage("/login").permitAll()
 			//adding page for redirection after successful login
 			.defaultSuccessUrl("/courses",true)
-			//Extending the cookie expiration time with 2 weeks (this is the default)
+			//pointing to the name attribute of the input field in html page
+			// the default is password/username and we can omit invocation of this method
+			//but we give it as an example in case we want to change the name attribute
+			.passwordParameter("password")
+			.usernameParameter("username")
+			//Extending the cookie expiration time
 			.and()
 			.rememberMe()
 			.tokenValiditySeconds((int)TimeUnit.DAYS.toSeconds(21))
@@ -84,35 +91,11 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter{
 	}
 
 	@Override
-	@Bean
-	protected UserDetailsService userDetailsService() {
-		
-	UserDetails annaSmithUser= User.builder()
-				.username("annasmith")
-				.password(passwordEncoder.encode("password"))
-			//	.roles(STUDENT.name())
-				.authorities(STUDENT.getGrantedAuthorities())
-				.build();
-	
-	UserDetails lindaUser= User.builder()
-			.username("linda")
-			.password(passwordEncoder.encode("password123"))
-	//		.roles(ADMIN.name())
-			.authorities(ADMIN.getGrantedAuthorities())
-			.build();
-
-	UserDetails tomUser= User.builder()
-			.username("tom")
-			.password(passwordEncoder.encode("password123"))
-	//		.roles(ADMINTRAINEE.name())
-			.authorities(ADMINTRAINEE.getGrantedAuthorities())
-			.build();
-	
-	return new InMemoryUserDetailsManager(
-			annaSmithUser,
-			lindaUser,
-			tomUser);
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.authenticationProvider(daoAuthenticationProvider);
 	}
 
+
+    
 	
 }
